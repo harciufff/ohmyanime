@@ -187,7 +187,9 @@ async fn update_crawl(cfg: &Config) -> Result<usize> {
         match (async {
             let mut r = PageRunner::start(cfg).await?;
             r.eval(&format!("{}/sidebar.html", cfg.source.base_url.trim_end_matches('/')), "location.href").await?;
-            harvest_batch(&mut r, cfg, &retry[..retry.len().min(HARVEST_BATCH as usize)]).await
+            let batch = harvest_batch(&mut r, cfg, &retry[..retry.len().min(HARVEST_BATCH as usize)]).await;
+            r.close().await;
+            batch
         }).await {
             Ok(batch) => {
                 for p in &retry[..retry.len().min(HARVEST_BATCH as usize)] {
@@ -233,6 +235,7 @@ async fn update_crawl_nav(cfg: &Config) -> Result<usize> {
             Ok(v) => v,
             Err(e) => {
                 eprintln!("az-list page {n} ... FAILED ({e})");
+                runner.close().await;
                 break;
             }
         };
@@ -282,11 +285,6 @@ fn urlencode(q: &str) -> String {
 /// /az-list pages: ?page=N, alphabetical.
 pub(crate) fn az_url(cfg: &Config, page: u32) -> String {
     format!("{}/az-list?page={}", cfg.source.base_url.trim_end_matches('/'), page)
-}
-
-#[cfg(test)]
-fn search_url(cfg: &Config, q: &str) -> String {
-    format!("{}{}{}", cfg.source.base_url.trim_end_matches('/'), cfg.source.search_path, urlencode(q))
 }
 
 /// One parsed az-list page: its title rows plus the site's advertised page
@@ -342,8 +340,8 @@ mod tests {
     #[test]
     fn queries_are_percent_encoded_and_joined() {
         assert_eq!(urlencode("a&b=c"), "a%26b%3Dc");
+        assert_eq!(urlencode("one punch man"), "one%20punch%20man");
         let cfg = Config::default();
-        assert_eq!(search_url(&cfg, "one punch man"), "https://www.animeworld.ac/search?keyword=one%20punch%20man");
         assert_eq!(az_url(&cfg, 2), "https://www.animeworld.ac/az-list?page=2");
     }
 

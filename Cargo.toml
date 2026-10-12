@@ -3,6 +3,7 @@ name = "ohmyanime"
 version = "0.1.0"
 edition = "2021"
 description = "Minimal anime search-and-play CLI driven by Obscura over CDP"
+license = "MIT"
 
 [dependencies]
 anyhow = "1"

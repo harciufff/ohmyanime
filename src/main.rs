@@ -1,4 +1,4 @@
-// ohMyAnime — minimal anime search & play CLI.
+// ohmyanime — minimal anime search & play CLI.
 // A local catalogue + fzf pick the title; Obscura over CDP lists episodes and
 // resolves the stream; mpv plays it. The browser is launched only when needed:
 // searching stays instant and offline.
@@ -32,10 +32,13 @@ use crate::{
     cdp::{fetch_page_js, page_eval},
     config::load_config,
     js::STREAM_JS,
-    obscura::{ensure_obscura, kill_tracked_sync},
+    obscura::ensure_obscura,
     site::{episodes_for, seasons_for, update},
     ui::{flow_pick_anime, flow_pick_episode, flow_pick_season},
 };
+
+#[cfg(unix)]
+use crate::obscura::kill_tracked_sync;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -137,7 +140,7 @@ async fn run(args: Vec<String>) -> Result<()> {
         .unwrap_or_else(|| args.iter().find(|a| !a.starts_with("--")).cloned());
 
     // Search needs no browser — pure local fuzzy over the cached catalogue.
-    let picked = flow_pick_anime(&cfg, arg_query, &cat.entries).await?;
+    let picked = flow_pick_anime(arg_query, &cat.entries).await?;
 
     let Some(mut anime) = picked else {
         if env::var_os("OHMYANIME_DEBUG").is_some() { eprintln!("no series picked — exiting quietly"); }
@@ -168,7 +171,7 @@ async fn run(args: Vec<String>) -> Result<()> {
 
         let Some(season) = flow_pick_season(&seasons).await? else {
             // Esc in the season menu: back to the series menu.
-            let picked = flow_pick_anime(&cfg, None, &cat.entries).await?;
+            let picked = flow_pick_anime(None, &cat.entries).await?;
             let Some(next) = picked else { break 'series };
             anime = next;
             continue 'series;
@@ -184,14 +187,14 @@ async fn run(args: Vec<String>) -> Result<()> {
                     continue 'series;
                 }
             };
-            if eps.is_empty() { bail!("no episodes found for {label}"); }
+            if eps.is_empty() { app.shutdown().await; bail!("no episodes found for {label}"); }
 
             let Some(ep_url) = flow_pick_episode(&eps).await? else {
                 // Esc in the episode menu: back to the season menu when there
                 // is one, else back to the series menu (reloading the same
                 // episode list forever would be an infinite loop).
                 if seasons.len() > 1 { continue 'series; }
-                let picked = flow_pick_anime(&cfg, None, &cat.entries).await?;
+                let picked = flow_pick_anime(None, &cat.entries).await?;
                 let Some(next) = picked else { break 'series };
                 anime = next;
                 continue 'series;

@@ -15,7 +15,7 @@ use tokio::{io::AsyncWriteExt, process};
 use crate::{
     cache::{Episode, Season},
     catalog::{match_catalogue, Entry},
-    config::{app_dir, now_secs, Config},
+    config::{app_dir, now_secs},
 };
 
 /// Build and run one interactive fzf over the given lines. Returns the picked
@@ -90,7 +90,7 @@ pub(crate) async fn pick(lines: Vec<String>, prompt: &str, opts: &[&str]) -> Res
             if picked_line.is_empty() {
                 // rc==0 with NOTHING selected: fzf misbehaved (weird options,
                 // broken TERM). Never silently throw the session away.
-                eprintln!("menu '{prompt}' returned no selection (empty). Check ~/.config/ohMyAnime/menu.log");
+                eprintln!("menu '{prompt}' returned no selection (empty). Check ~/.config/ohmyanime/menu.log");
                 Ok(None)
             } else {
                 // Return the FULL line ("title\turl"): fzf already hides the
@@ -113,7 +113,7 @@ pub(crate) async fn pick(lines: Vec<String>, prompt: &str, opts: &[&str]) -> Res
                 eprintln!("(fzf flag/env problem — send: echo $TERM; echo \"$FZF_DEFAULT_OPTS\"; fzf --version)");
             }
             else {
-                eprintln!("(unexpected: full log in ~/.config/ohMyAnime/menu.log)");
+                eprintln!("(unexpected: full log in ~/.config/ohmyanime/menu.log)");
             }
             Ok(None)
         }
@@ -129,7 +129,7 @@ pub(crate) fn picked_url(line: &Option<String>) -> Option<String> {
 }
 
 /// Search + pick a title; returns the picked entry, if any.
-pub(crate) async fn flow_pick_anime(cfg: &Config, arg_query: Option<String>, entries: &[Entry]) -> Result<Option<Entry>> {
+pub(crate) async fn flow_pick_anime(arg_query: Option<String>, entries: &[Entry]) -> Result<Option<Entry>> {
     let q = match arg_query {
         Some(q) if !q.trim().is_empty() => q.trim().to_string(),
         // No argument: interactive search over everything we have.
@@ -147,7 +147,6 @@ pub(crate) async fn flow_pick_anime(cfg: &Config, arg_query: Option<String>, ent
     // catalogue (words can come in any order).
     let hits = match_catalogue(entries, &q);
     let line = pick(hits.iter().map(|e| row(e)).collect(), "pick: ", &[]).await?;
-    let _ = cfg;
     let entry = picked_url(&line).map(|u| {
         match hits.iter().find(|e| e.u == u) {
             Some(e) => (*e).clone(),
