@@ -1,0 +1,24 @@
+[package]
+name = "ohmyanime"
+version = "0.1.0"
+edition = "2021"
+description = "Minimal anime search-and-play CLI driven by Obscura over CDP"
+
+[dependencies]
+anyhow = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "time", "sync", "io-util"] }
+# ws:// only, so no TLS backend is pulled in
+tokio-tungstenite = { version = "0.24", default-features = false, features = ["connect", "handshake"] }
+futures-util = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+dirs = "5"
+
+# Unix only: SIGTERM/SIGKILL to the detached Obscura process group on exit.
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[profile.release]
+lto = true
+strip = true
