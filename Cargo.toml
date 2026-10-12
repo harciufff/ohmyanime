@@ -6,7 +6,7 @@ description = "Minimal anime search-and-play CLI driven by Obscura over CDP"
 
 [dependencies]
 anyhow = "1"
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "time", "sync", "io-util"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "time", "sync", "io-util", "signal"] }
 # ws:// only, so no TLS backend is pulled in
 tokio-tungstenite = { version = "0.24", default-features = false, features = ["connect", "handshake"] }
 futures-util = "0.3"
