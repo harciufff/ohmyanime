@@ -60,7 +60,7 @@ No prebuilt binaries are published (too many OS/arch combinations to get
 wrong). Build from source — it takes under a minute:
 
 ```bash
-git clone <repo-url> ohmyanime && cd ohmyanime
+git clone https://github.com/harciufff/ohmyanime.git && cd ohmyanime
 cargo build --release
 # then put it on your PATH, e.g.:
 cp target/release/ohmyanime ~/.local/bin/
