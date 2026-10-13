@@ -3,6 +3,8 @@
 Search and play anime from your terminal: pick a title with `fzf`,
 `ohmyanime` resolves episodes through a headless browser and plays them in `mpv`.
 
+<img src="https://github.com/user-attachments/assets/8fb6ad0a-4093-43aa-a520-dca0be9c20d8" width="720" alt="ohmyanime demo">
+
 ```text
 ohmyanime --update        # build the local title catalogue (one time)
 ohmyanime                 # pick series -> season -> episode -> mpv
